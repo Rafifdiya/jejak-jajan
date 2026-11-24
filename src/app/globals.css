@@ -198,6 +198,20 @@ textarea {
   );
 }
 
+/* Lencana Admin: kilau biru */
+.kilau.kilau-biru {
+  background-image: linear-gradient(
+    100deg,
+    #1d4ed8 0%,
+    #1d4ed8 40%,
+    #38bdf8 48%,
+    #e0f2fe 50%,
+    #38bdf8 52%,
+    #1d4ed8 60%,
+    #1d4ed8 100%
+  );
+}
+
 /* Pengaturan tampilan (halaman /pengaturan) */
 /* Ukuran teks dari ukuran dasar (106.25% HP, 112.5% laptop): kecil -10%, sedang +12%, besar +20% */
 html.teks-kecil { font-size: 95.625%; }
@@ -392,8 +406,11 @@ html[data-sidebar="tutup"] .sidebar-utama { display: none; }
   /* Navbar atas di HP: tombol Admin, Keluar, Masuk lebih kecil */
   .nav-besar, .nav-masuk { zoom: 0.8; }
   /* Tentang kami di HP: isi diperkecil, jarak atas tipis */
-  .halaman-tentang { zoom: 0.82; padding-top: 1.25rem; }
+  .halaman-tentang { zoom: 0.943; padding-top: 1.25rem; }
   .halaman-tentang h1 { font-size: 1.75rem !important; }
   .tombol-kontak { zoom: 0.72; bottom: 8.5rem; } /* nilai bottom ikut di-zoom: +-6rem dari bawah, di atas menu bawah */
   .bagikan-beranda, .beranda .font-hand.text-white\/90 { font-size: 1.2rem !important; }
 }
+
+/* Tentang kami: seluruh isi +15% (di HP: 0.82 x 1.15, lihat bagian HP) */
+@media (min-width: 640px) { .halaman-tentang { zoom: 1.15; } }

@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { usePremium } from "./TanpaIklanPremium";
-import { Crown, GraduationCap, Home, Info, LayoutGrid, MessageCircleQuestion, Plus, UserRound } from "lucide-react";
+import { useAkun } from "./TanpaIklanPremium";
+import { Crown, GraduationCap, Home, Info, LayoutGrid, MessageCircleQuestion, Plus, ShieldCheck, UserRound } from "lucide-react";
 
 const menu = [
   { href: "/", label: "Beranda", Icon: Home },
@@ -14,15 +14,17 @@ const menu = [
   { href: "/premium", label: "Premium", Icon: Crown },
   { href: "/upload", label: "Kontribusi", Icon: Plus },
   { href: "/tentang", label: "Tentang kami", Icon: Info },
+  // Khusus admin (disaring di bawah)
+  { href: "/admin", label: "Admin", Icon: ShieldCheck },
 ];
 
 /** Menu sidebar; client hanya untuk menandai halaman aktif. */
 export function SidebarLinks() {
   const path = usePathname();
-  const premium = usePremium();
+  const { premium, admin } = useAkun();
   return (
     <ul className="space-y-1">
-      {menu.map(({ href, label, Icon }) => {
+      {menu.filter((m) => m.href !== "/admin" || admin).map(({ href, label, Icon }) => {
         const aktif = href === "/" ? path === "/" : path.startsWith(href);
         return (
           <li key={href}>

@@ -46,16 +46,17 @@ export function useBebasIklan() {
   return premium;
 }
 
-/** Status Premium murni (admin otomatis Premium), tanpa memperhitungkan pengaturan iklan. */
-export function usePremium() {
-  const [premium, setPremium] = useState(false);
+/** Status akun di browser: Premium murni (admin otomatis Premium) & admin, tanpa pengaturan iklan. */
+export function useAkun() {
+  const [akun, setAkun] = useState({ premium: false, admin: false });
 
   useEffect(() => {
     const supabase = createClient();
     async function cek(userId: string | undefined) {
-      if (!userId) return setPremium(false);
+      if (!userId) return setAkun({ premium: false, admin: false });
       const { data } = await supabase.from("profiles").select("role, premium_sampai").eq("id", userId).maybeSingle();
-      setPremium(data?.role === "admin" || (!!data?.premium_sampai && new Date(data.premium_sampai) > new Date()));
+      const admin = data?.role === "admin";
+      setAkun({ admin, premium: admin || (!!data?.premium_sampai && new Date(data.premium_sampai) > new Date()) });
     }
     const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
       cek(session?.user.id);
@@ -68,7 +69,12 @@ export function usePremium() {
     };
   }, []);
 
-  return premium;
+  return akun;
+}
+
+/** Status Premium murni (admin otomatis Premium). */
+export function usePremium() {
+  return useAkun().premium;
 }
 
 /** Bungkus slot iklan sidebar: akun Premium melihat tautan "bebas iklan" sebagai gantinya. */

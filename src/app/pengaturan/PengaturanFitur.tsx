@@ -16,7 +16,6 @@ const GRATIS: Item[] = [
 
 const PREMIUM: Item[] = [
   { nama: "bebasIklan", judul: "Bebas iklan", ket: "Sembunyikan iklan di sidebar, katalog, dan pop-up." },
-  { nama: "lencana", judul: "Lencana Prem di ikon profil", ket: "Tampilkan lencana Prem berkilau di avatar navbar." },
 ];
 
 function Saklar({ nyala, terkunci, onKlik, label }: { nyala: boolean; terkunci?: boolean; onKlik: () => void; label: string }) {
@@ -107,7 +106,7 @@ export function PengaturanFitur({ premium, admin }: { premium: boolean; admin?: 
     setNilai((s) => ({ ...s, [item.nama!]: baru }));
     simpanPengaturan(item.nama, baru);
     // Iklan & lencana dibaca ulang lewat event yang sama dengan status Premium
-    if (item.nama === "bebasIklan" || item.nama === "lencana") window.dispatchEvent(new Event(EVENT_PREMIUM));
+    if (item.nama === "bebasIklan") window.dispatchEvent(new Event(EVENT_PREMIUM));
   }
 
   const daftar = (items: Item[], kunci?: boolean) => (

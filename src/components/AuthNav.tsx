@@ -6,13 +6,14 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { LogOut, Mail, Settings, UserRound } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { cariLencana } from "@/lib/lencana";
 import { EVENT_SESI_SIAP } from "./LoginDialog";
 import { LoginButton } from "./LoginButton";
 import { EVENT_PREMIUM } from "./TanpaIklanPremium";
-import { EVENT_PENGATURAN, bacaPengaturan } from "@/lib/pengaturan";
 import { EVENT_PESAN, bacaDibaca, idPesan, keTanya } from "@/lib/pesan";
 
-type Status = { masuk: boolean; admin: boolean; avatar: string | null; premium: boolean; email?: string } | null;
+type Profil = { role: string; avatar_url: string | null; premium_sampai: string | null; lencana?: string | null };
+type Status = { masuk: boolean; admin: boolean; avatar: string | null; premium: boolean; email?: string; lencana?: string | null } | null;
 
 /** Dipicu halaman Pengaturan profil setelah foto diganti */
 export const EVENT_PROFIL = "jj:profil-berubah";
@@ -20,7 +21,6 @@ export const EVENT_PROFIL = "jj:profil-berubah";
 /** Bagian navbar yang bergantung login: tombol Masuk, atau link Profil/Admin + Keluar. */
 export function AuthNav() {
   const [status, setStatus] = useState<Status>(null);
-  const [lencana, setLencana] = useState(true);
   const [adaPesanBaru, setAdaPesanBaru] = useState(false);
   const diPengaturan = usePathname().startsWith("/profil/saya/pengaturan");
 
@@ -29,7 +29,9 @@ export function AuthNav() {
 
     async function muat(userId: string | undefined, email?: string) {
       if (!userId) return setStatus({ masuk: false, admin: false, avatar: null, premium: false });
-      const { data } = await supabase.from("profiles").select("role, avatar_url, premium_sampai").eq("id", userId).single();
+      // Kolom lencana dari migration 0024; bila belum ada, ulangi tanpa kolom itu
+      const res = await supabase.from("profiles").select("role, avatar_url, premium_sampai, lencana").eq("id", userId).single<Profil>();
+      const { data } = res.error?.code === "42703" ? await supabase.from("profiles").select("role, avatar_url, premium_sampai").eq("id", userId).single<Profil>() : res;
       const admin = data?.role === "admin";
       // Admin otomatis Premium (migration 0012)
       const premium = admin || (!!data?.premium_sampai && new Date(data.premium_sampai) > new Date());
@@ -43,7 +45,7 @@ export function AuthNav() {
           setTimeout(r, 2000);
         });
       }
-      setStatus({ masuk: true, admin, avatar, premium, email });
+      setStatus({ masuk: true, admin, avatar, premium, email, lencana: data?.lencana ?? null });
       window.dispatchEvent(new Event(EVENT_SESI_SIAP));
       cekPesan(userId, admin);
     }
@@ -67,21 +69,27 @@ export function AuthNav() {
     }
     window.addEventListener(EVENT_PESAN, hitungPesan);
 
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
-      muat(session?.user.id, session?.user.email);
+    const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event !== "INITIAL_SESSION" || !session) return void muat(session?.user.id, session?.user.email);
+      // Sesi tersimpan di browser bisa sudah tidak berlaku di server (token kedaluwarsa / dicabut).
+      // Cek ke server dulu; kalau tidak valid, bersihkan sesi lokal agar navbar tidak tampak "masuk"
+      // padahal halaman lain menganggap belum masuk.
+      setTimeout(async () => {
+        const { data, error } = await supabase.auth.getUser();
+        if (error || !data.user) {
+          await supabase.auth.signOut({ scope: "local" });
+          return muat(undefined);
+        }
+        muat(data.user.id, data.user.email);
+      }, 0);
     });
     const ulang = () => supabase.auth.getUser().then(({ data }) => muat(data.user?.id, data.user?.email));
     window.addEventListener(EVENT_PROFIL, ulang);
     window.addEventListener(EVENT_PREMIUM, ulang); // Premium demo diaktifkan / dibatalkan
-    // Lencana Prem bisa disembunyikan di /pengaturan
-    const cekLencana = () => setLencana(bacaPengaturan("lencana"));
-    cekLencana();
-    window.addEventListener(EVENT_PENGATURAN, cekLencana);
     return () => {
       sub.subscription.unsubscribe();
       window.removeEventListener(EVENT_PROFIL, ulang);
       window.removeEventListener(EVENT_PREMIUM, ulang);
-      window.removeEventListener(EVENT_PENGATURAN, cekLencana);
       window.removeEventListener(EVENT_PESAN, hitungPesan);
     };
   }, []);
@@ -96,6 +104,8 @@ export function AuthNav() {
     // eslint-disable-next-line @next/next/no-location-assign-relative-destination -- sengaja muat ulang penuh
     window.location.assign("/");
   }
+
+  const lencanaNav = cariLencana(status?.lencana);
 
   // Selama cek sesi, sisakan ruang kosong agar navbar tidak bergeser.
   if (!status) return <span className="w-14" aria-hidden />;
@@ -155,10 +165,10 @@ export function AuthNav() {
               <UserRound size={22} />
             )}
           </span>
-          {status.premium && lencana && (
-            // Lencana Premium di pojok kanan bawah avatar, teks berkilau seperti menu Premium di sidebar
-            <span className="pointer-events-none absolute -bottom-1.5 -right-3 rounded-full border border-amber-400 bg-surface px-1.5 py-px text-[0.75rem] leading-tight shadow-sm">
-              <span className="kilau font-bold">{status.admin ? "Admin" : "Prem"}</span>
+          {lencanaNav && (
+            // Lencana yang dipasang (atur di Pengaturan profil) di pojok kanan bawah avatar
+            <span className={`pointer-events-none absolute -bottom-1.5 -right-3 rounded-full border bg-surface px-1.5 py-px text-[0.75rem] leading-tight shadow-sm ${lencanaNav.gaya}`}>
+              <span className={lencanaNav.teks}>{lencanaNav.pendek}</span>
             </span>
           )}
           {!diPengaturan && status.email && (

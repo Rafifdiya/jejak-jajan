@@ -11,14 +11,17 @@ export const metadata: Metadata = { title: "Tentang" };
 type Anggota = { nama: string; peran: string; bio?: string; foto?: string; sosial?: { instagram?: string; discord?: string; linkedin?: string; email?: string } };
 const tim: Anggota[] = [
   { nama: "Rafifdiya", peran: "Project Lead", foto: "/tim/rafifdiya.png",
+    bio: "Mengatur arah project dan membangun web Jejak Jajan dari database sampai tampilan.",
     sosial: { instagram: "https://www.instagram.com/rafif.dy/", discord: "https://discord.com/users/699140515270230076", linkedin: "https://www.linkedin.com/in/rafifdiya", email: "rafifdiya@binus.ac.id" } },
   { nama: "Albert Mario L.", peran: "Creative Design", foto: "/tim/albert-mario.jpg",
+    bio: "Merancang tampilan, identitas visual motif kawung, dan materi presentasi Jejak Jajan.",
     sosial: { instagram: "https://www.instagram.com/albml138/", discord: "https://discord.com/users/455542617166577665", linkedin: "https://www.linkedin.com/in/albert-mario-laurent", email: "albert.laurent@binus.ac.id" } },
   { nama: "Ahmad Daffa H.", peran: "Business Management", foto: "/tim/ahmad-daffa.jpg",
+    bio: "Menyusun model bisnis, riset pengguna, dan menjalin kerja sama dengan penjual & sponsor.",
     sosial: { instagram: "https://www.instagram.com/ad_daffa_h/", discord: "https://discord.com/users/346560552333737986", linkedin: "https://www.linkedin.com/in/ahmad-daffa-hidayatullah-44094943a", email: "ahmad.hidayatullah@binus.ac.id" } },
 ];
-// Kontak tim (bukan kontak pribadi). Kosongkan untuk menyembunyikan.
-const kontakTim = "email / Instagram tim (segera)";
+// Kontak tim (akun resmi, bukan kontak pribadi). Kosongkan untuk menyembunyikan.
+const kontakTim = { label: "@jejakjajan.archive", href: "https://www.instagram.com/jejakjajan.archive/" };
 
 export default function TentangPage() {
   // Motif kawung samar di belakang halaman, sama seperti hero beranda
@@ -79,7 +82,8 @@ export default function TentangPage() {
         </ul>
         {kontakTim && (
           <p id="kontak" className="scroll-mt-24 text-sm text-ink-2">
-            <span className="font-semibold text-ink">Kontak tim:</span> {kontakTim}
+            <span className="font-semibold text-ink">Kontak tim:</span>{" "}
+            <a href={kontakTim.href} target="_blank" rel="noopener noreferrer" className="font-semibold text-brand underline">{kontakTim.label}</a> (Instagram)
           </p>
         )}
       </section>
