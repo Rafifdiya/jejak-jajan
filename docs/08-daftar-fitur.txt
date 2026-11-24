@@ -152,6 +152,7 @@ Iklan (untuk pengguna gratis)
                                0025 batas simpan 10 (gratis)
                                0026 permintaan Premium (QRIS + persetujuan admin)
                                0027 admin hapus riwayat permintaan Premium
+                               0028 admin lihat 10 akun terbaru (username + email)
 * fitur koleksi sudah dihapus dari web, tabelnya dibiarkan
 Opsional: supabase/data-iklan-demo.sql (3 iklan merek fiktif)
 

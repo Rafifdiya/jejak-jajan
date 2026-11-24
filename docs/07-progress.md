@@ -311,6 +311,8 @@ Catatan: jam untuk entri lama tidak tercatat, jadi hanya tanggal. Entri baru dit
 307. **2026-11-25 02:56** - Premium tanpa payment gateway: paket 1 bulan Rp15.000 / 3 bulan Rp30.000; user bayar QRIS/transfer lalu isi form di /premium (paket, nama, no HP, NIM opsional, foto bukti ke bucket privat bukti-premium); admin menyetujui/menolak di tab Premium dashboard (Setujui = Premium aktif 30/90 hari otomatis + lencana Premium, diperpanjang bila masih aktif). Anti-spam: 1 permintaan menunggu per akun, bisa kirim lagi setelah diproses atau 2 hari. Premium demo gratis dimatikan untuk user. Migration 0026 (premium_requests, cek_permintaan_premium, proses_premium, bucket + policy storage). Docs & BMC disesuaikan (titik impas 2 pengiklan + 20 Premium bulanan).
 308. **2026-11-25 03:02** - Admin bisa menghapus riwayat permintaan Premium yang sudah disetujui/ditolak (per item atau semua sekaligus) beserta foto bukti; permintaan menunggu tidak bisa dihapus. Migration 0027 (policy delete premium_requests & storage bukti-premium).
 309. **2026-11-25 03:04** - Rilis persiapan pameran: semua perubahan 304-308 di-commit, PR feat/pameran di-merge ke main, deploy otomatis Vercel (region sin1). Migration 0024-0027 sudah/perlu dijalankan di Supabase.
+310. **2026-11-25 03:10** - Migration 0024-0027 sudah dijalankan di Supabase; alur Premium QRIS (kirim bukti, admin setujui, hapus riwayat) diuji di production dan aman. Siap pameran.
+311. **2026-11-25 03:14** - Dashboard moderasi: tab Akun menampilkan 10 akun terbaru (username + email + tanggal dibuat) dan total akun, plus link "Lihat semua akun di Supabase". Email dibaca lewat fungsi akun_terbaru khusus admin (migration 0028).
 
 ## Berikutnya
 - Review docs/06 model bisnis bersama tim, lalu buat slide
