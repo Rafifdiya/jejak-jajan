@@ -19,6 +19,7 @@ import { IklanItem } from "./IklanItem";
 import { AksiPremium, HapusRiwayatPremium } from "./AksiPremium";
 import { getPermintaanPremium } from "@/lib/premium-admin";
 import { cariPaket } from "@/lib/premium";
+import { getAkunTerbaru, linkSemuaAkun } from "@/lib/akun-admin";
 
 export const metadata: Metadata = { title: "Admin", robots: { index: false } };
 
@@ -51,7 +52,7 @@ async function Isi({ searchParams }: Pick<PageProps<"/admin">, "searchParams">) 
   if (!sesi.admin) return <p className="text-ink-2">Halaman ini khusus admin.</p>;
 
   const t = (await searchParams).tab;
-  const tab = t === "laporan" || t === "kategori" || t === "iklan" || t === "premium" ? t : "kiriman";
+  const tab = t === "laporan" || t === "kategori" || t === "iklan" || t === "premium" || t === "akun" ? t : "kiriman";
   const [kiriman, laporan, kategori, stats, minat] = await Promise.all([
     getKirimanAdmin(),
     getLaporan(),
@@ -60,6 +61,7 @@ async function Isi({ searchParams }: Pick<PageProps<"/admin">, "searchParams">) 
     getJumlahMinatKelas(),
   ]);
   const permintaan = await getPermintaanPremium();
+  const akunBaru = tab === "akun" ? await getAkunTerbaru() : { akun: [] };
   const premiumMenunggu = permintaan.filter((p) => p.status === "menunggu").length;
   const iklan = tab === "iklan" ? await getIklanAdmin() : [];
   const menunggu = kiriman.filter((k) => k.status === "pending");
@@ -83,10 +85,52 @@ async function Isi({ searchParams }: Pick<PageProps<"/admin">, "searchParams">) 
           { key: "kategori", label: "Kategori" },
           { key: "iklan", label: "Iklan" },
           { key: "premium", label: `Premium (${premiumMenunggu})` },
+          { key: "akun", label: "Akun" },
         ]}
       />
 
       {tab === "kiriman" && <KirimanList kiriman={kiriman} />}
+
+      {tab === "akun" && (
+        <div className="space-y-3">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <p className="text-sm text-ink-2">
+              10 akun terbaru{akunBaru.akun[0] ? ` dari total ${akunBaru.akun[0].total} akun` : ""}. Data lengkap ada di database.
+            </p>
+            <a href={linkSemuaAkun()} target="_blank" rel="noopener noreferrer" className={`${btn} text-sm`}>
+              Lihat semua akun di Supabase ↗
+            </a>
+          </div>
+          {akunBaru.error ? (
+            <p className="text-danger">Gagal memuat akun{/function|akun_terbaru/.test(akunBaru.error) ? " (jalankan migration 0028)" : `: ${akunBaru.error}`}.</p>
+          ) : akunBaru.akun.length === 0 ? (
+            <p className="text-ink-2">Belum ada akun.</p>
+          ) : (
+            <div className="overflow-x-auto rounded-lg border border-line bg-surface">
+              <table className="w-full text-left text-sm">
+                <thead className="border-b border-line bg-subtle">
+                  <tr>
+                    <th className="p-3">Username</th>
+                    <th className="p-3">Email</th>
+                    <th className="p-3">Dibuat</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-line">
+                  {akunBaru.akun.map((a, i) => (
+                    <tr key={`${a.email}-${i}`}>
+                      <td className="p-3 font-semibold">
+                        {a.username ? <Link href={`/profil/${a.username}`} className="hover:text-brand hover:underline">@{a.username}</Link> : "-"}
+                      </td>
+                      <td className="p-3 break-all">{a.email ?? "-"}</td>
+                      <td className="p-3 whitespace-nowrap text-ink-2">{formatTanggal(a.dibuat)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
 
       {tab === "premium" && (
         <div className="space-y-3">
