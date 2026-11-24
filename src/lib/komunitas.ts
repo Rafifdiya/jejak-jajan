@@ -174,6 +174,7 @@ export type ProfilUser = {
   premium: boolean; // tampilkan lencana Premium di avatar
   avatarUrl: string | null;
   bergabung: string; // tanggal akun dibuat
+  lencana: string | null; // lencana yang dipasang (migration 0024)
 };
 
 type ProfilRow = {
@@ -185,6 +186,7 @@ type ProfilRow = {
   role: "user" | "admin";
   avatar_url: string | null;
   created_at: string;
+  lencana?: string | null;
 };
 
 async function lengkapiProfil(p: ProfilRow): Promise<ProfilUser> {
@@ -213,10 +215,18 @@ async function lengkapiProfil(p: ProfilRow): Promise<ProfilUser> {
     premium: premium.data === true,
     avatarUrl: p.avatar_url,
     bergabung: p.created_at,
+    lencana: p.lencana ?? null,
   };
 }
 
-const PROFIL_KOLOM = "id, username, nama_tampil, daerah, bio, role, avatar_url, created_at";
+const PROFIL_KOLOM_DASAR = "id, username, nama_tampil, daerah, bio, role, avatar_url, created_at";
+const PROFIL_KOLOM = `${PROFIL_KOLOM_DASAR}, lencana`;
+
+/** Ambil profil dengan kolom lencana; bila migration 0024 belum dijalankan, ulangi tanpa kolom itu. */
+async function denganLencana<T>(query: (kolom: string) => PromiseLike<{ data: T; error: { message: string; code?: string } | null }>) {
+  const res = await query(PROFIL_KOLOM);
+  return res.error?.code === "42703" ? query(PROFIL_KOLOM_DASAR) : res;
+}
 
 /** Profil publik berdasarkan username. */
 export async function getProfil(username: string): Promise<ProfilUser | undefined> {
@@ -224,7 +234,7 @@ export async function getProfil(username: string): Promise<ProfilUser | undefine
   cacheLife("minutes");
   cacheTag("profil", "jajanan");
   const p = cek<ProfilRow | null>(
-    await createPublicClient().from("profiles").select(PROFIL_KOLOM).eq("username", username).maybeSingle(),
+    await denganLencana((k) => createPublicClient().from("profiles").select(k).eq("username", username).maybeSingle()),
   );
   return p ? lengkapiProfil(p) : undefined;
 }
@@ -243,7 +253,7 @@ export async function getUsernames(): Promise<string[]> {
 export async function getProfilSaya(userId: string): Promise<{ profil: ProfilUser; tersimpan: string[] }> {
   const supabase = await createClient();
   const [p, saves] = await Promise.all([
-    supabase.from("profiles").select(PROFIL_KOLOM).eq("id", userId).single(),
+    denganLencana((k) => supabase.from("profiles").select(k).eq("id", userId).single()),
     supabase.from("saves").select("snacks (slug)").eq("user_id", userId).order("created_at", { ascending: false }),
   ]);
   const profil = await lengkapiProfil(cek<ProfilRow>(p));

@@ -8,6 +8,7 @@ import { createClient } from "@/lib/supabase/client";
 import { adaKataKasar } from "@/lib/kata-kasar";
 import { segarkanJajanan } from "@/app/jajanan/actions";
 import { LoginButton } from "@/components/LoginButton";
+import { usePremium } from "@/components/TanpaIklanPremium";
 
 type Data = {
   nama: string;
@@ -46,6 +47,7 @@ const labelCls = "block space-y-1 text-sm font-semibold";
 
 /** Form edit teks kontribusi milik sendiri (fungsi edit_jajanan, migration 0019). */
 export function FormEdit() {
+  const premium = usePremium();
   const slug = useSearchParams().get("slug") ?? "";
   const router = useRouter();
   const [d, setD] = useState<Data | null>();
@@ -130,7 +132,8 @@ export function FormEdit() {
         resep: {
           ...d.resep,
           bahan: d.resep.bahan.split("\n").map((b) => b.trim()).filter(Boolean),
-          langkah: d.resep.langkah.filter((l) => l.trim()),
+          // Langkah hanya dikirim akun Premium (server juga mengabaikan dari akun lain)
+          langkah: premium ? d.resep.langkah.filter((l) => l.trim()) : [],
         },
       }),
     };
@@ -186,8 +189,13 @@ export function FormEdit() {
           <label className={labelCls}>Bahan (satu per baris)
             <textarea value={d.resep.bahan} onChange={(e) => ubahResep("bahan", e.target.value)} rows={6} className={input} />
           </label>
+          {!premium ? (
+            <p className="rounded-lg border-2 border-dashed border-amber-400/70 bg-amber-50/60 p-3 text-sm">
+              <b>Langkah pembuatan khusus Premium.</b> Hanya akun Premium yang bisa mengubah langkah. <Link href="/premium" className="font-semibold text-brand underline">Lihat Premium</Link>
+            </p>
+          ) : (
           <div className="space-y-2">
-            <p className="text-sm font-semibold">Langkah</p>
+            <p className="text-sm font-semibold">Langkah pembuatan (khusus Premium)</p>
             {d.resep.langkah.map((l, i) => (
               <div key={i} className="flex gap-2">
                 <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-brand text-sm text-white">{i + 1}</span>
@@ -207,6 +215,7 @@ export function FormEdit() {
               <Plus size={15} aria-hidden /> Tambah langkah
             </button>
           </div>
+          )}
           <label className={labelCls}>Link video (opsional)
             <input value={d.resep.videoUrl} onChange={(e) => ubahResep("videoUrl", e.target.value)} className={input} />
           </label>

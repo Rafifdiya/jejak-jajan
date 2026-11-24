@@ -16,6 +16,9 @@ import { IklanForm } from "./IklanForm";
 import { LihatIklanToggle } from "./LihatIklanToggle";
 import { AksiLaporan } from "./AksiLaporan";
 import { IklanItem } from "./IklanItem";
+import { AksiPremium, HapusRiwayatPremium } from "./AksiPremium";
+import { getPermintaanPremium } from "@/lib/premium-admin";
+import { cariPaket } from "@/lib/premium";
 
 export const metadata: Metadata = { title: "Admin", robots: { index: false } };
 
@@ -48,7 +51,7 @@ async function Isi({ searchParams }: Pick<PageProps<"/admin">, "searchParams">) 
   if (!sesi.admin) return <p className="text-ink-2">Halaman ini khusus admin.</p>;
 
   const t = (await searchParams).tab;
-  const tab = t === "laporan" || t === "kategori" || t === "iklan" ? t : "kiriman";
+  const tab = t === "laporan" || t === "kategori" || t === "iklan" || t === "premium" ? t : "kiriman";
   const [kiriman, laporan, kategori, stats, minat] = await Promise.all([
     getKirimanAdmin(),
     getLaporan(),
@@ -56,6 +59,8 @@ async function Isi({ searchParams }: Pick<PageProps<"/admin">, "searchParams">) 
     getStats(),
     getJumlahMinatKelas(),
   ]);
+  const permintaan = await getPermintaanPremium();
+  const premiumMenunggu = permintaan.filter((p) => p.status === "menunggu").length;
   const iklan = tab === "iklan" ? await getIklanAdmin() : [];
   const menunggu = kiriman.filter((k) => k.status === "pending");
 
@@ -77,10 +82,50 @@ async function Isi({ searchParams }: Pick<PageProps<"/admin">, "searchParams">) 
           { key: "laporan", label: `Laporan (${laporan.length})` },
           { key: "kategori", label: "Kategori" },
           { key: "iklan", label: "Iklan" },
+          { key: "premium", label: `Premium (${premiumMenunggu})` },
         ]}
       />
 
       {tab === "kiriman" && <KirimanList kiriman={kiriman} />}
+
+      {tab === "premium" && (
+        <div className="space-y-3">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <p className="text-sm text-ink-2">Cek bukti transfer & nominal sesuai paket, lalu Setujui (Premium aktif otomatis, diperpanjang bila masih aktif) atau Tolak dengan alasan.</p>
+            {permintaan.some((p) => p.status !== "menunggu") && <HapusRiwayatPremium />}
+          </div>
+          {permintaan.length === 0 ? (
+            <p className="text-ink-2">Belum ada permintaan Premium.</p>
+          ) : (
+            <ul className="space-y-3">
+              {permintaan.map((p) => (
+                <li key={p.id} className="flex flex-wrap gap-4 rounded-lg border border-line bg-surface p-4">
+                  {p.buktiUrl ? (
+                    <a href={p.buktiUrl} target="_blank" rel="noopener noreferrer" title="Buka bukti transfer">
+                      {/* eslint-disable-next-line @next/next/no-img-element -- link sementara bucket privat */}
+                      <img src={p.buktiUrl} alt="Bukti transfer" className="h-28 w-28 rounded-md border border-line object-cover" />
+                    </a>
+                  ) : (
+                    <span className="flex h-28 w-28 items-center justify-center rounded-md bg-subtle text-xs text-ink-2">Bukti tidak terbaca</span>
+                  )}
+                  <div className="min-w-0 flex-1 space-y-1 text-sm">
+                    <p className="flex flex-wrap items-center gap-2">
+                      <span className="font-semibold">{p.nama}</span>
+                      {p.username && <span className="text-ink-2">@{p.username}</span>}
+                      <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${p.status === "menunggu" ? "bg-amber-400/20 text-amber-700" : p.status === "disetujui" ? "bg-green-500/15 text-green-700" : "bg-danger/10 text-danger"}`}>
+                        {p.status}
+                      </span>
+                    </p>
+                    <p>Paket <b>{cariPaket(p.paket)?.label ?? p.paket}</b> ({cariPaket(p.paket)?.harga}) · HP {p.no_hp}{p.nim ? ` · NIM ${p.nim}` : ""}</p>
+                    <p className="text-ink-2">Dikirim {formatTanggal(p.created_at)}{p.alasan ? ` · Alasan tolak: ${p.alasan}` : ""}</p>
+                    {p.status === "menunggu" ? <AksiPremium id={p.id} /> : <HapusRiwayatPremium id={p.id} />}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
 
       {tab === "iklan" && (
         <div className="space-y-6">

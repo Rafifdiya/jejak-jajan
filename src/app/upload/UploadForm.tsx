@@ -2,13 +2,14 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { Check, CircleCheck, Loader2, Plus, Send, Trash2 } from "lucide-react";
+import { Check, CircleCheck, Crown, Loader2, Lock, Plus, Send, Trash2 } from "lucide-react";
 import { KepalaHalaman } from "@/components/KepalaHalaman";
 import { LoginButton } from "@/components/LoginButton";
 import { WAKTU } from "@/lib/format";
 import { createClient } from "@/lib/supabase/client";
 import type { SnackCardData } from "@/lib/types";
 import { PhotoInput } from "./PhotoInput";
+import { usePremium } from "@/components/TanpaIklanPremium";
 
 type Langkah = { instruksi: string; foto?: string; videoUrl: string };
 
@@ -44,7 +45,9 @@ const kosong: Draft = {
 };
 
 // 3 langkah pertama wajib, 3 terakhir opsional
-const LANGKAH = ["Info dasar", "Cerita", "Vote kelangkaan", "Resep", "Langkah pembuatan", "Lokasi penjual"];
+const LANGKAH = ["Info dasar", "Cerita", "Vote kelangkaan", "Langkah pembuatan", "Resep", "Lokasi penjual"];
+/** Indeks langkah khusus Premium */
+const PREMIUM = 3;
 const DRAFT_KEY = "jejak-jajan:draft-upload";
 const input = "w-full rounded-sm border border-line bg-surface px-3 py-2";
 
@@ -74,6 +77,7 @@ export function UploadForm({ provinsi }: Props) {
   const [kirim, setKirim] = useState<"idle" | "mengirim" | "terkirim">("idle");
 
   const konfirmasi = useRef<HTMLDialogElement>(null);
+  const premium = usePremium();
   const [memuat, setMemuat] = useState(true);
 
   // Setiap membuka Kontribusi: animasi loading singkat lalu form baru yang kosong.
@@ -165,7 +169,7 @@ export function UploadForm({ provinsi }: Props) {
       resep: {
         ...d.resep,
         bahan: d.resep.bahan.split("\n").map((b) => b.trim()).filter(Boolean),
-        langkah: d.langkah,
+        langkah: premium ? d.langkah : [],
       },
       lokasi: d.lokasi,
       rarity: d.rarity,
@@ -233,9 +237,13 @@ export function UploadForm({ provinsi }: Props) {
       <ol className="langkah-kontribusi flex gap-2 overflow-x-auto lg:block lg:space-y-2">
         {LANGKAH.map((l, i) => (
           <li key={l} className="shrink-0">
-            {(i === 0 || i === 3) && (
-              <p className={`mb-1.5 mt-2 hidden rounded-md px-3 py-1.5 text-xs font-semibold uppercase tracking-wide lg:block ${i === 0 ? "bg-orange-500/15 text-brand" : "bg-line/70 font-bold text-ink-2/[0.56]"}`}>
-                {i === 0 ? "Formulir wajib" : "Opsional"}
+            {(i === 0 || i === PREMIUM || i === PREMIUM + 1) && (
+              <p
+                className={`mb-1.5 mt-2 hidden rounded-md px-3 py-1.5 text-xs font-semibold uppercase tracking-wide lg:block ${
+                  i === 0 ? "bg-orange-500/15 text-brand" : i === PREMIUM ? "bg-amber-400/20 text-amber-700" : "bg-line/70 font-bold text-ink-2/[0.56]"
+                }`}
+              >
+                {i === 0 ? "Formulir wajib" : i === PREMIUM ? "Khusus Premium" : "Opsional"}
               </p>
             )}
             <button
@@ -244,6 +252,7 @@ export function UploadForm({ provinsi }: Props) {
               className={`flex w-full items-center gap-1.5 rounded-sm px-3 py-2 text-left ${i === step ? "bg-brand font-semibold text-white" : "font-medium text-ink hover:bg-subtle"}`}
             >
               <span>• {l}</span>
+              {i === PREMIUM && <Crown size={14} className={`shrink-0 ${i === step ? "text-white" : "text-amber-600"}`} aria-label="Premium" />}
               {/* Langkah wajib: tanda centang bila sudah terisi, "wajib" bila belum */}
               {WAJIB.has(i) &&
                 (kurang.some((k) => k.step === i) ? (
@@ -309,13 +318,13 @@ export function UploadForm({ provinsi }: Props) {
             <Field label="Cerita / asal-usul *">
               <textarea value={d.cerita} onChange={(e) => ubah({ cerita: e.target.value })} rows={8} className={input} placeholder="Dari mana asalnya, kapan biasa disajikan, kenangan tentang jajanan ini..." />
             </Field>
-            <Field label="Sumber informasi">
+            <Field label="Sumber informasi (opsional)">
               <input value={d.sumber} onChange={(e) => ubah({ sumber: e.target.value })} className={input} placeholder="mis. Cerita nenek, penjual di Pasar Senen" />
             </Field>
           </>
         )}
 
-        {step === 3 && (
+        {step === 4 && (
           <>
             <Field label="Nama versi resep">
               <input value={d.resep.judulVersi} onChange={(e) => ubahResep({ judulVersi: e.target.value })} className={input} placeholder="mis. Versi Mbah Sri" />
@@ -348,9 +357,18 @@ export function UploadForm({ provinsi }: Props) {
           </>
         )}
 
-        {step === 4 && (
+        {step === PREMIUM && !premium && (
+          <div className="flex flex-wrap items-center gap-3 rounded-xl border-2 border-dashed border-amber-400/70 bg-amber-50/60 p-4">
+            <Lock size={20} className="shrink-0 text-amber-600" aria-hidden />
+            <p className="min-w-0 flex-1 text-sm">
+              <b>Langkah pembuatan khusus anggota Premium.</b> Tutorial langkah demi langkah hanya bisa diisi dan dilihat akun Premium. Langkah ini opsional, boleh dilewati.
+            </p>
+            <Link href="/premium" className="rounded-full bg-brand px-4 py-1.5 text-sm font-semibold text-white hover:bg-brand-hover">Lihat Premium</Link>
+          </div>
+        )}
+        {step === PREMIUM && premium && (
           <>
-            <p className="text-sm text-ink-2">Resep baru tersimpan jika minimal satu langkah diisi. Foto dan video per langkah boleh dikosongkan.</p>
+            <p className="text-sm text-ink-2">Opsional. Tutorial ini hanya terlihat oleh anggota Premium. Foto dan video per langkah boleh dikosongkan.</p>
             <ol className="space-y-4">
               {d.langkah.map((l, i) => (
                 <li key={i} className="space-y-3 rounded-lg border border-line bg-surface p-4">
@@ -487,9 +505,12 @@ export function UploadForm({ provinsi }: Props) {
             <Ringkas label="Asal">{[d.daerah, namaProvinsi].filter(Boolean).join(", ") || "-"}</Ringkas>
             <Ringkas label="Foto utama">{d.cover ? "Ada" : "Belum"}</Ringkas>
             <Ringkas label="Cerita">{d.cerita ? `${d.cerita.slice(0, 80)}${d.cerita.length > 80 ? "..." : ""}` : "Dilewati"}</Ringkas>
-            <Ringkas label="Resep">
-              {d.langkah.some((l) => l.instruksi.trim()) ? `${d.langkah.filter((l) => l.instruksi.trim()).length} langkah` : "Dilewati"}
-            </Ringkas>
+            <Ringkas label="Resep">{d.resep.bahan.trim() ? `${d.resep.bahan.split("\n").filter((b) => b.trim()).length} bahan` : "Dilewati"}</Ringkas>
+            {premium && (
+              <Ringkas label="Langkah">
+                {d.langkah.some((l) => l.instruksi.trim()) ? `${d.langkah.filter((l) => l.instruksi.trim()).length} langkah` : "Dilewati"}
+              </Ringkas>
+            )}
             <Ringkas label="Lokasi">{d.lokasi.tempat || "Dilewati"}</Ringkas>
             <Ringkas label="Kelangkaan">{rarityPilihan.find(([v]) => v === d.rarity)?.[1] ?? "Dilewati"}</Ringkas>
           </dl>

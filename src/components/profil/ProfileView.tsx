@@ -6,6 +6,7 @@ import { AvatarProfil } from "./AvatarProfil";
 import { KepalaHalaman } from "@/components/KepalaHalaman";
 import { LevelKontributor } from "./LevelKontributor";
 import { formatTanggal } from "@/lib/format";
+import { ChipLencana } from "./ChipLencana";
 import { Tabs } from "@/components/Tabs";
 import { getCards } from "@/lib/data";
 import type { ProfilUser } from "@/lib/komunitas";
@@ -38,12 +39,8 @@ export async function ProfileView({ user, diriSendiri, tab, basePath, tersimpan 
         <div className="flex-1 space-y-1">
           <h1 className="flex flex-wrap items-center gap-2 font-display text-3xl font-semibold">
             {user.nama}
-            {user.premium && (
-              <span className="rounded-full bg-amber-500/15 px-2.5 py-0.5 font-sans text-sm">
-                {/* Teks berkilau seperti menu Premium di sidebar; admin ditandai "Admin" */}
-                <span className="kilau font-semibold">{user.role === "admin" ? "Admin" : "Premium"}</span>
-              </span>
-            )}
+            {/* Lencana yang dipasang user (Pengaturan profil > Kustom lencana) */}
+            <ChipLencana id={user.lencana} />
           </h1>
           <p className="text-sm text-ink-2">
             {[user.username && `@${user.username}`, user.daerah].filter(Boolean).join(" · ") || "Belum mengisi username & daerah"}

@@ -7,6 +7,7 @@ import { KepalaHalaman } from "@/components/KepalaHalaman";
 import { LoginButton } from "@/components/LoginButton";
 import { createClient } from "@/lib/supabase/server";
 import { PengaturanForm } from "./PengaturanForm";
+import { KustomLencana } from "./KustomLencana";
 
 export const metadata: Metadata = { title: "Pengaturan profil" };
 
@@ -35,18 +36,26 @@ async function Isi() {
       <LoginButton className="rounded-full bg-brand px-6 py-2 font-semibold text-white hover:bg-brand-hover">Masuk dulu</LoginButton>
     );
   }
-  const { data: p } = await supabase
-    .from("profiles")
-    .select("username, nama_tampil, avatar_url")
-    .eq("id", data.user.id)
-    .single<{ username: string | null; nama_tampil: string | null; avatar_url: string | null }>();
+  type Profil = { username: string | null; nama_tampil: string | null; avatar_url: string | null; role: string; premium_sampai: string | null; lencana?: string | null };
+  const ambil = (kolom: string) => supabase.from("profiles").select(kolom).eq("id", data.user!.id).single<Profil>();
+  const [res, jml] = await Promise.all([
+    ambil("username, nama_tampil, avatar_url, role, premium_sampai, lencana"),
+    supabase.from("snacks").select("id", { count: "exact", head: true }).eq("created_by", data.user.id).eq("status", "approved"),
+  ]);
+  // Kolom lencana dari migration 0024; bila belum ada, ulangi tanpa kolom itu
+  const { data: p } = res.error?.code === "42703" ? await ambil("username, nama_tampil, avatar_url, role, premium_sampai") : res;
+  const admin = p?.role === "admin";
+  const premium = admin || (!!p?.premium_sampai && new Date(p.premium_sampai) > new Date());
   return (
-    <PengaturanForm
-      userId={data.user.id}
-      email={data.user.email ?? ""}
-      nama={p?.nama_tampil ?? ""}
-      username={p?.username ?? ""}
-      avatarUrl={p?.avatar_url ?? null}
-    />
+    <div className="space-y-6">
+      <PengaturanForm
+        userId={data.user.id}
+        email={data.user.email ?? ""}
+        nama={p?.nama_tampil ?? ""}
+        username={p?.username ?? ""}
+        avatarUrl={p?.avatar_url ?? null}
+      />
+      <KustomLencana awal={p?.lencana ?? null} kontribusi={jml.count ?? 0} premium={premium} admin={admin} />
+    </div>
   );
 }

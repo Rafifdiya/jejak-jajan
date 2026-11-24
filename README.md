@@ -1,7 +1,9 @@
-# la-peace-legit (nama sementara)
+# Jejak Jajan
 
 Web arsip jajanan tradisional berbasis komunitas: cerita, resep, langkah pembuatan, dan lokasi terakhir terlihat.
 Project mata kuliah Venture Creation.
+
+Web online: https://jejak-jajan.vercel.app
 
 ## Masalah
 
@@ -18,15 +20,16 @@ Ensiklopedia jajanan tradisional Indonesia yang diisi komunitas. Pengguna bisa m
 
 ## Status
 
-Sprint 0: riset & desain.
+Web utama sudah online (Vercel) dan tersambung Supabase. Daftar fitur & status: [docs/08](docs/08-daftar-fitur.txt).
+Business Model Canvas: [docs/10](docs/10-business-model-canvas.txt).
 
 ## Tim
 
 | Nama | Peran |
 |------|-------|
-| - | Product Owner |
-| - | Scrum Master |
-| - | Developer |
+| Rafifdiya | Project Lead |
+| Albert Mario L. | Creative Design |
+| Ahmad Daffa H. | Business Management |
 
 ## Dokumentasi
 
@@ -40,12 +43,13 @@ Lihat folder [docs/](docs/):
 6. [Progress](docs/07-progress.md)
 7. [Daftar fitur & status](docs/08-daftar-fitur.txt)
 8. [Serah terima & to-do](docs/09-serah-terima.txt)
+9. [Business Model Canvas](docs/10-business-model-canvas.txt) (versi singkat: [docs/10b](docs/10b-bmc-singkat.txt))
 
 ## Menjalankan web (lokal)
 Butuh Node.js 20+ dan project Supabase.
 
 1. Salin `.env.example` jadi `.env.local`, isi URL + publishable key Supabase.
-2. Jalankan semua file `supabase/migrations/0001-0023` berurutan di
+2. Jalankan semua file `supabase/migrations/0001-0027` berurutan di
    Supabase Dashboard > SQL Editor.
 3. Authentication > Sign In / Providers > Email: matikan "Confirm email".
 4. Jadikan akun admin (daftar dulu lewat web, lalu di SQL Editor):

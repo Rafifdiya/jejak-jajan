@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Bookmark, BookmarkCheck } from "lucide-react";
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { openLogin } from "./LoginDialog";
 
@@ -50,7 +51,7 @@ export function SimpanButton({ slug }: { slug: string }) {
     const { error } = state.tersimpan
       ? await supabase.from("saves").delete().eq("snack_id", state.snackId)
       : await supabase.from("saves").insert({ snack_id: state.snackId });
-    if (error) setPesan(error.message);
+    if (error) setPesan(/Batas simpan/.test(error.message) ? "Batas simpan akun gratis 10 jajanan." : error.message);
     await muat();
     setBusy(false);
   }
@@ -61,7 +62,11 @@ export function SimpanButton({ slug }: { slug: string }) {
         {state.tersimpan ? <BookmarkCheck size={14} aria-hidden /> : <Bookmark size={14} aria-hidden />}
         {state.tersimpan ? "Tersimpan" : "Simpan"}
       </button>
-      {pesan && <span role="alert" className="text-xs text-danger">{pesan}</span>}
+      {pesan && (
+        <span role="alert" className="text-xs text-danger">
+          {pesan} {pesan.startsWith("Batas") && <Link href="/premium" className="font-semibold text-brand underline">Premium tanpa batas</Link>}
+        </span>
+      )}
     </span>
   );
 }

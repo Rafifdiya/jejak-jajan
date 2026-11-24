@@ -16,6 +16,7 @@ import { SnackImage } from "@/components/SnackImage";
 import { SimpanButton } from "@/components/SimpanButton";
 import { AlatResep } from "@/components/AlatResep";
 import { SudahCoba } from "@/components/SudahCoba";
+import { LangkahPremium } from "@/components/LangkahPremium";
 import { HapusJajanan } from "@/app/admin/HapusJajanan";
 import { GantiFotoJajanan } from "@/app/admin/GantiFotoJajanan";
 import { labelWaktu } from "@/lib/format";
@@ -109,19 +110,16 @@ export default async function DetailPage({ params }: PageProps<"/jajanan/[slug]"
                   {snack.resep.waktuMenit > 0 && <span>{labelWaktu(snack.resep.waktuMenit)}</span>}
                   <span className="capitalize">{snack.resep.kesulitan}</span>
                 </div>
-                <h3 className="font-semibold">Bahan</h3>
-                <ul className="list-inside list-disc space-y-1">
-                  {snack.resep.bahan.map((b) => <li key={b}>{b}</li>)}
-                </ul>
-                <h3 className="font-semibold">Langkah</h3>
-                <ol className="space-y-3">
-                  {snack.resep.langkah.map((l, i) => (
-                    <li key={i} className="flex gap-3">
-                      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-brand text-sm text-white">{i + 1}</span>
-                      <p className="pt-0.5">{l}</p>
-                    </li>
-                  ))}
-                </ol>
+                {snack.resep.bahan.length > 0 && (
+                  <>
+                    <h3 className="font-semibold">Bahan</h3>
+                    <ul className="list-inside list-disc space-y-1">
+                      {snack.resep.bahan.map((b) => <li key={b}>{b}</li>)}
+                    </ul>
+                  </>
+                )}
+                {/* Langkah pembuatan khusus Premium: diambil di browser sesuai akun */}
+                <LangkahPremium slug={snack.slug} />
                 {snack.resep.videoUrl && (
                   // Link saja, bukan iframe: embed YouTube ~1 MB JavaScript
                   <a href={snack.resep.videoUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-brand underline">
