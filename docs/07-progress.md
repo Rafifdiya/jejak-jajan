@@ -313,6 +313,7 @@ Catatan: jam untuk entri lama tidak tercatat, jadi hanya tanggal. Entri baru dit
 309. **2026-11-25 03:04** - Rilis persiapan pameran: semua perubahan 304-308 di-commit, PR feat/pameran di-merge ke main, deploy otomatis Vercel (region sin1). Migration 0024-0027 sudah/perlu dijalankan di Supabase.
 310. **2026-11-25 03:10** - Migration 0024-0027 sudah dijalankan di Supabase; alur Premium QRIS (kirim bukti, admin setujui, hapus riwayat) diuji di production dan aman. Siap pameran.
 311. **2026-11-25 03:14** - Dashboard moderasi: tab Akun menampilkan 10 akun terbaru (username + email + tanggal dibuat) dan total akun, plus link "Lihat semua akun di Supabase". Email dibaca lewat fungsi akun_terbaru khusus admin (migration 0028).
+312. **2026-11-25 03:17** - PR #20 (tab Akun) di-merge, deploy Vercel sukses. Repo GitHub di-rename dari la-peace-legit2 menjadi jejak-jajan (https://github.com/Rafifdiya/jejak-jajan); link lama dialihkan otomatis, koneksi Vercel tetap. Alamat remote di laptop diperbarui (git remote set-url). Anggota tim lain perlu menjalankan perintah yang sama.
 
 ## Berikutnya
 - Review docs/06 model bisnis bersama tim, lalu buat slide
